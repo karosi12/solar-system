@@ -5,26 +5,24 @@ const express = require('express');
 const OS = require('os');
 const bodyParser = require('body-parser');
 const mongoose = require("mongoose");
+const bluebird = require('bluebird')
 const app = express();
 const cors = require('cors')
 
+mongoose.Promise = bluebird
 
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '/')));
 app.use(cors())
 
-mongoose.connect(process.env.MONGO_URI, {
-    user: process.env.MONGO_USERNAME,
-    pass: process.env.MONGO_PASSWORD,
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}, function(err) {
-    if (err) {
-        console.log("error!! " + err)
-    } else {
-      //  console.log("MongoDB Connection Successful")
-    }
-})
+const mongo = mongoose.connect(`mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_URI}`)
+
+mongo.then((data) => {
+    console.log(`MongoDB Connection Established on development`)
+  })
+  .catch((err) => {
+    console.error('Unable to connect to MongoDB', err)
+  });
 
 var Schema = mongoose.Schema;
 
@@ -40,18 +38,13 @@ var planetModel = mongoose.model('planets', dataSchema);
 
 
 
-app.post('/planet',   function(req, res) {
-   // console.log("Received Planet ID " + req.body.id)
-    planetModel.findOne({
-        id: req.body.id
-    }, function(err, planetData) {
-        if (err) {
-            alert("Ooops, We only have 9 planets and a sun. Select a number from 0 - 9")
-            res.send("Error in Planet Data")
-        } else {
-            res.send(planetData);
-        }
-    })
+app.post('/planet',  async function(req, res) {
+    const planet = await planetModel.findOne({id: req.body.id});
+    if(planet){
+        return res.send(planetData);
+    }
+    alert("Ooops, We only have 9 planets and a sun. Select a number from 0 - 9")
+    res.send("Error in Planet Data")
 })
 
 app.get('/',   async (req, res) => {
