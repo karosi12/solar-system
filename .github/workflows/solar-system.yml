@@ -14,59 +14,61 @@ env:
 
       
 jobs:
-    unit-testing:
-        name: Unit Testing
-        strategy:
-          matrix:
-            nodejs_version: [18, 19, 20]
-            operating_system: [ubuntu-latest, macos-latest]
-            exclude:
-              - nodejs_version: 18
-                operating_system: macos-latest
-        runs-on: ${{ matrix.operating_system }}
-        steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
+  unit-testing:
+    name: Unit Testing
+    strategy:
+      matrix:
+        nodejs_version: [18, 20]
+        operating_system: [ubuntu-latest, macos-latest]
+        exclude:
+          - nodejs_version: 18
+            operating_system: macos-latest
+    runs-on: ${{ matrix.operating_system }}
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-        - name: Setup NodeJS Version
-          uses: actions/setup-node@v3
-          with:
-            node-version: ${{ matrix.nodejs_version }}
-    
-        - name: Install Dependencies
-          run: npm install
-    
-        - name: Unit Testing
-          run: npm test
+    - name: Setup NodeJS Version
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.nodejs_version }}
 
-        - name: Archive Test Result
-          uses: actions/upload-artifact@v3
-          with:
-            name: Mocha-Test-Result
-            path: test-results.xml
+    - name: Install Dependencies
+      run: npm install
 
-    code-coverage:
-      name: Unit Testing
-      runs-on: ubuntu-latest
-      steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Unit Testing
+      id: nodejs-unit-testing-step
+      run: npm test
 
-      - name: Setup NodeJS Version
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-  
-      - name: Install Dependencies
-        run: npm install
-  
-      - name: Unit Testing
-        continue-on-error: true
-        run: npm run coverage
+    - name: Archive Test Result
+      if: steps.nodejs-unit-testing-step.outcome == 'failure' || steps.nodejs-unit-testing-step.outcome == 'success'
+      uses: actions/upload-artifact@v3
+      with:
+        name: Mocha-Test-Result
+        path: test-results.xml
 
-      - name: Archive Test Result
-        uses: actions/upload-artifact@v3
-        with:
-          name: Code-Coverage-Result
-          path: coverage
-          retention-days: 5
+  code-coverage:
+    name: Unit Testing
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup NodeJS Version
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Unit Testing
+      continue-on-error: true
+      run: npm run coverage
+
+    - name: Archive Test Result
+      uses: actions/upload-artifact@v3
+      with:
+        name: Code-Coverage-Result
+        path: coverage
+        retention-days: 5
