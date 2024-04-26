@@ -91,6 +91,8 @@ jobs:
   Docker:
     name: Push Docker image to Docker Hub
     needs: [unit-testing, code-coverage]
+    permissions: 
+      packages: write
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
