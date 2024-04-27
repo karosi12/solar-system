@@ -66,16 +66,27 @@ jobs:
         path: test-results.xml
 
   code-coverage:
-    name: Unit Testing
+    name: Code Coverage
+    container: 
+      image: node:18
+    services:
+      mongodb:
+        image: siddharth67/mongo-db:non-prod
+        options: 
+          --name mongo
+    env:
+      MONGO_URI: 'mongo:27017/superData'
+      MONGO_USERNAME: non-prod-user
+      MONGO_PASSWORD: non-prod-password
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Setup NodeJS Version
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
+    # - name: Setup NodeJS Version
+    #   uses: actions/setup-node@v3
+    #   with:
+    #     node-version: 18
 
     - name: Cache NPM dependencies
       id: cache-node_modules-code-coverage
@@ -87,7 +98,7 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
-    - name: Unit Testing
+    - name: Run test coverage
       continue-on-error: true
       run: npm run coverage
 
