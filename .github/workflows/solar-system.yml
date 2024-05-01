@@ -109,7 +109,7 @@ jobs:
         path: coverage
         retention-days: 5
 
-  Docker:
+  docker:
     name: Push Docker image to Docker Hub
     needs: [unit-testing, code-coverage]
     permissions: 
@@ -156,3 +156,21 @@ jobs:
 
           echo Testing Image URL using wget
           wget -q -O - 127.0.0.1:3000/live | grep live
+
+  dev-deploy:
+    name: devDeployment
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4  
+
+    - name: Install kubectl CLI
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.26.0'
+    - name: Fetch Kubernetes cluster details
+      run: | 
+        kubectl version --short
+        echo -----------------------
+        kubectl get nodes
